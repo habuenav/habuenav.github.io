@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Holman Buenaventura | Embedded, Audio DSP & Web</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-hover: #1f2630;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.12);
+      --tag-bg: #21262d;
+      --radius: 12px;
+    }
+
+    [data-theme="light"] {
+      --bg: #f6f8fa;
+      --surface: #ffffff;
+      --surface-hover: #f3f4f6;
+      --border: #d0d7de;
+      --text: #1f2328;
+      --muted: #656d76;
+      --accent: #0969da;
+      --accent-soft: rgba(9, 105, 218, 0.1);
+      --tag-bg: #eaeef2;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* Navegación */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      background-color: color-mix(in srgb, var(--bg) 82%, transparent);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    nav a:hover {
+      color: var(--accent);
+    }
+
+    .theme-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.4rem 0.65rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+
+    .theme-btn:hover {
+      border-color: var(--accent);
+    }
+
+    /* Contenedor Principal */
+    main {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 5rem 0 4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 650px;
+      margin-bottom: 2rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.4rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: transform 0.15s, opacity 0.2s, border-color 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0d1117;
+    }
+
+    [data-theme="light"] .btn-primary {
+      color: #ffffff;
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+    }
+
+    /* Secciones */
+    section {
+      padding: 4rem 0;
+    }
+
+    .section-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-size: 1.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    /* Filtros */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .filter-btn {
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.95rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* Grid de Proyectos */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      background: var(--surface-hover);
+    }
+
+    .card.hidden {
+      display: none;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .card-category {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+    }
+
+    .card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.6rem;
+      letter-spacing: -0.01em;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .tag {
+      background: var(--tag-bg);
+      color: var(--muted);
+      font-size: 0.78rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .card-links {
+      display: flex;
+      gap: 1rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+    }
+
+    .card-links a {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: color 0.2s;
+    }
+
+    .card-links a:hover {
+      color: var(--accent);
+    }
+
+    /* Sobre mí / Habilidades */
+    .about-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 2rem;
+    }
+
+    .about-box p {
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .skills-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-content: flex-start;
+    }
+
+    .skill-pill {
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 2rem;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+      .about-box {
+        grid-template-columns: 1fr;
+      }
+      nav a {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="nav-container">
+      <a href="#" class="logo">habuenav<span>.github.io</span></a>
+      <nav>
+        <a href="#proyectos">Proyectos</a>
+        <a href="#sobre-mi">Sobre mí</a>
+        <a href="https://github.com/habuenav" target="_blank" rel="noopener">GitHub</a>
+        <button class="theme-btn" id="themeToggle" aria-label="Cambiar tema">☀️</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <span class="badge">Embedded Systems • Audio DSP • Web Tools</span>
+      <h1>Holman Buenaventura</h1>
+      <p>
+        Desarrollo hardware musical, sintetizadores en tiempo real sobre microcontroladores ESP32,
+        librerías C++ ligeras y herramientas interactivas en la web.
+      </p>
+      <div class="hero-actions">
+        <a href="#proyectos" class="btn btn-primary">Ver proyectos</a>
+        <a href="https://github.com/habuenav" target="_blank" rel="noopener" class="btn btn-secondary">Perfil en GitHub ↗</a>
+      </div>
+    </section>
+
+    <!-- Proyectos -->
+    <section id="proyectos">
+      <div class="section-header">
+        <h2 class="section-title">Proyectos Destacados</h2>
+        <div class="filters">
+          <button class="filter-btn active" data-filter="all">Todos</button>
+          <button class="filter-btn" data-filter="embedded">Hardware & ESP32</button>
+          <button class="filter-btn" data-filter="audio">Audio & Síntesis</button>
+          <button class="filter-btn" data-filter="web">Web & Herramientas</button>
+        </div>
+      </div>
+
+      <div class="grid" id="projectsGrid">
+        <!-- Proyecto 1 -->
+        <article class="card" data-category="embedded audio">
+          <div>
+            <div class="card-top">
+              <span class="card-category">Hardware & Audio</span>
+            </div>
+            <h3>HEWI — Electronic Wind Instrument</h3>
+            <p>
+              Instrumento de viento electrónico open-source basado en ESP32 con sensores de presión barométrica,
+              botones táctiles capacitivos, síntesis por muestras y diseño paramétrico 3D.
+            </p>
+            <div class="tags">
+              <span class="tag">ESP32</span>
+              <span class="tag">C++</span>
+              <span class="tag">I2S Audio</span>
+              <span class="tag">OpenSCAD</span>
+            </div>
+          </div>
+          <div class="card-links">
+            <a href="https://github.com/habuenav/HEWI" target="_blank" rel="noopener">Código fuente ↗</a>
+          </div>
+        </article>
+
+        <!-- Proyecto 2 -->
+        <article class="card" data-category="audio embedded">
+          <div>
+            <div class="card-top">
+              <span class="card-category">Audio & DSP</span>
+            </div>
+            <h3>WindSynth & SamplerSynth</h3>
+            <p>
+              Librerías de síntesis de un solo encabezado para ESP32 con soporte MIDI, control de velocidad,
+              salida por I2S DAC, PWM y Bluetooth A2DP con optimización de punto fijo.
+            </p>
+            <div class="tags">
+              <span class="tag">Arduino</span>
+              <span class="tag">DSP</span>
+              <span class="tag">Bluetooth A2DP</span>
+              <span class="tag">MIDI</span>
+            </div>
+          </div>
+          <div class="card-links">
+            <a href="https://github.com/habuenav" target="_blank" rel="noopener">Ver repositorios ↗</a>
+          </div>
+        </article>
+
+        <!-- Proyecto 3 -->
+        <article class="card" data-category="embedded">
+          <div>
+            <div class="card-top">
+              <span class="card-category">Sistemas Embebidos</span>
+            </div>
+            <h3>VP_SQL & easyMenu</h3>
+            <p>
+              Motor relacional ligero respaldado en LittleFS para ESP32 y librería de menús gráficos sin
+              fragmentación de memoria para pantallas OLED/TFT (U8g2 y Adafruit_GFX).
+            </p>
+            <div class="tags">
+              <span class="tag">C/C++</span>
+              <span class="tag">LittleFS</span>
+              <span class="tag">U8g2</span>
+              <span class="tag">Zero-Heap</span>
+            </div>
+          </div>
+          <div class="card-links">
+            <a href="https://github.com/habuenav" target="_blank" rel="noopener">Ver repositorios ↗</a>
+          </div>
+        </article>
+
+        <!-- Proyecto 4 -->
+        <article class="card" data-category="web audio">
+          <div>
+            <div class="card-top">
+              <span class="card-category">Herramienta Web</span>
+            </div>
+            <h3>Universal Header WAV Master</h3>
+            <p>
+              Editor e inspector de chunks RIFF/WAV directamente en el navegador con visor interactivo de forma
+              de onda para editar puntos de bucle (smpl), notas raíz y metadatos PCM.
+            </p>
+            <div class="tags">
+              <span class="tag">HTML5</span>
+              <span class="tag">JavaScript</span>
+              <span class="tag">Web Audio API</span>
+              <span class="tag">RIFF/WAV</span>
+            </div>
+          </div>
+          <div class="card-links">
+            <a href="https://github.com/habuenav" target="_blank" rel="noopener">Ver en GitHub ↗</a>
+          </div>
+        </article>
+
+        <!-- Proyecto 5 -->
+        <article class="card" data-category="web">
+          <div>
+            <div class="card-top">
+              <span class="card-category">Web & Juegos</span>
+            </div>
+            <h3>Juegos Arcade & Web MIDI</h3>
+            <p>
+              Colección de experimentos interactivos en un solo archivo HTML: desde entrenadores rítmicos
+              controlados por Web BLE-MIDI hasta recreaciones arcade isométricas en Canvas.
+            </p>
+            <div class="tags">
+              <span class="tag">Canvas 2D</span>
+              <span class="tag">Web MIDI</span>
+              <span class="tag">Vanilla JS</span>
+            </div>
+          </div>
+          <div class="card-links">
+            <a href="https://github.com/habuenav" target="_blank" rel="noopener">Explorar demos ↗</a>
+          </div>
+        </article>
+
+        <!-- Proyecto 6 -->
+        <article class="card" data-category="embedded audio">
+          <div>
+            <div class="card-top">
+              <span class="card-category">Ingeniería Inversa</span>
+            </div>
+            <h3>Interfaces MIDI Vintage</h3>
+            <p>
+              Ingeniería inversa de protocolos propietarios en controladores de viento clásicos como Suzuki SRW-100
+              y Yamaha WX-11 para convertirlos en controladores MIDI modernos con ESP32.
+            </p>
+            <div class="tags">
+              <span class="tag">Hardware Hacking</span>
+              <span class="tag">MIDI</span>
+              <span class="tag">ESP32</span>
+            </div>
+          </div>
+          <div class="card-links">
+            <a href="https://github.com/habuenav" target="_blank" rel="noopener">Ver notas y código ↗</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Sobre mí -->
+    <section id="sobre-mi">
+      <div class="section-header">
+        <h2 class="section-title">Sobre mí</h2>
+      </div>
+      <div class="about-box">
+        <div>
+          <p>
+            Me apasiona construir soluciones completas desde el hardware y el firmware de bajo nivel hasta
+            interfaces gráficas y herramientas web ligeras sin dependencias innecesarias.
+          </p>
+          <p>
+            Disfruto experimentando con procesamiento digital de señales (DSP), acústica aplicada a instrumentos
+            electrónicos, impresión 3D paramétrica y optimización de rendimiento en microcontroladores.
+          </p>
+        </div>
+        <div>
+          <h3 style="font-size: 1rem; margin-bottom: 1rem;">Tecnologías frecuentes</h3>
+          <div class="skills-grid">
+            <span class="skill-pill">C / C++ Embebido</span>
+            <span class="skill-pill">ESP32 / FreeRTOS</span>
+            <span class="skill-pill">Audio DSP & MIDI</span>
+            <span class="skill-pill">HTML / CSS / JS</span>
+            <span class="skill-pill">Web Audio / Web MIDI</span>
+            <span class="skill-pill">OpenSCAD & 3D Printing</span>
+            <span class="skill-pill">Electrónica & PCB</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Hecho por Holman Buenaventura • Alojado en <a href="https://github.com/habuenav" target="_blank" rel="noopener">GitHub Pages</a></p>
+  </footer>
+
+  <script>
+    // Filtro de proyectos por categoría
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const cards = document.querySelectorAll('.card');
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filter = btn.dataset.filter;
+        cards.forEach(card => {
+          const categories = card.dataset.category.split(' ');
+          if (filter === 'all' || categories.includes(filter)) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // Alternar modo claro / oscuro
+    const themeToggle = document.getElementById('themeToggle');
+    const root = document.documentElement;
+
+    themeToggle.addEventListener('click', () => {
+      const isLight = root.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        root.removeAttribute('data-theme');
+        themeToggle.textContent = '☀️';
+      } else {
+        root.setAttribute('data-theme', 'light');
+        themeToggle.textContent = '🌙';
+      }
+    });
+  </script>
+</body>
+</html>
